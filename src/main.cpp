@@ -16,6 +16,9 @@
 #define LED_MODE_STANDBY 1
 #define LED_MODE_BLINKING 2
 
+extern WiFiClientSecure client;
+extern NTPClient timeClient;
+
 UniversalTelegramBot bot(TG_BOT_TOKEN, client);
 
 Thread sensorThread = Thread();

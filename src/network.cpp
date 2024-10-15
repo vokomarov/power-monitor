@@ -2,6 +2,10 @@
 #include <config.h>
 #include <secrets.h>
 
+WiFiClientSecure client;
+WiFiUDP ntpUDP;
+NTPClient timeClient(ntpUDP);
+
 unsigned int WiFiConnectionTimeStarted = 0;
 
 void initWiFi() {
