@@ -1,0 +1,2 @@
+void initOTA();
+void checkOTA();
