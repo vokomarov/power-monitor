@@ -11,15 +11,17 @@
 #include <config.h>
 #include <ota.h>
 #include <network.h>
+#include <ha.h>
 
 #define LED_MODE_OFF 0
 #define LED_MODE_STANDBY 1
 #define LED_MODE_BLINKING 2
 
-extern WiFiClientSecure client;
+extern WiFiClientSecure httpsClient;
 extern NTPClient timeClient;
 
-UniversalTelegramBot bot(TG_BOT_TOKEN, client);
+UniversalTelegramBot bot(TG_BOT_TOKEN, httpsClient);
+HomeAssistantSensor haSensor;
 
 Thread sensorThread = Thread();
 Thread monitorThread = Thread();
@@ -123,8 +125,10 @@ void sensorThreadFunc() {
 
   if (currentPowerState == LOW) {
     ledMode = LED_MODE_STANDBY;
+    haSensor.track(false);
   } else {
     ledMode = LED_MODE_OFF;
+    haSensor.track(true);
   }
 }
 

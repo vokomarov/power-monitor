@@ -15,6 +15,38 @@ Board is connected and powered on [UPS-DC-36W using HX12500-9Y connector](https:
 - Configure WiFi and Telegram credentials in `secrets.h`
 - Figure out IP address of your board once connected (or assign IP to board MAC statically on your router which is recommended)
 
+### Home Assistant
+
+In order to enable automation based on power availability Power Monitor can report `binary_sensor` to your Home Assistant.
+
+Home Assistant Webhook API is used. First please configure your trigger and sensor by adding following configuration to Home Assistant's `configuration.yml`:
+
+```yml
+template:
+  - trigger:
+      - trigger: webhook
+        webhook_id: {{ your-secret-webhook-ID }}
+    binary_sensor:
+      - name: "Power Monitor"
+        unique_id: "binary_sensor.power_monitor"
+        state: "{{ trigger.json.available }}"
+        device_class: power
+```
+
+Don't forget to reboot Home Assistant instance.
+
+Test it by using proper values from the config.
+
+```
+curl --location 'http://homeassistant.local:8123/api/webhook/{{ your-secret-webhook-ID }}' \
+	--header 'Content-Type: application/json' \
+	--data '{"available":true}'
+```
+
+You should see updates in your Home Assistant Settings / Devices / Entites and search for "Power Monitor".
+
+Now configure `secrets.h` accordingly and flash updated firmware.
+
 ## Development
 
 ### USB Serial

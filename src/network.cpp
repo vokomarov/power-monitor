@@ -2,7 +2,8 @@
 #include <config.h>
 #include <secrets.h>
 
-WiFiClientSecure client;
+WiFiClient httpClient;
+WiFiClientSecure httpsClient;
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
 
@@ -31,7 +32,7 @@ void initWiFi() {
     Serial.printf("Connected to WiFi, IP: %s\n\r", WiFi.localIP().toString().c_str());
     Serial.printf("RSSI: %d\n\r", WiFi.RSSI());
 
-    client.setInsecure();  // Bypass SSL for testing purposes
+    httpsClient.setInsecure();  // Bypass SSL for testing purposes
 }
 
 void checkWiFi() {
