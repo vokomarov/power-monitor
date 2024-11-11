@@ -16,14 +16,25 @@ void HomeAssistantSensor::track(bool state) {
         return;
     }
 
+    this->state = state;
+    this->track();
+}
+
+void HomeAssistantSensor::track() {
+    if (!this->isValidConfig()) {
+        return;
+    }
+
     String webhookId = HA_WEBHOOK_ID;
     String url = "/api/webhook/" + webhookId;
-    String stateCast = state ? "true" : "false";
+    String stateCast = this->state ? "true" : "false";
     String postData = "{\"available\": " + stateCast + "}";
     String contentType = "application/json";
 
     Serial.printf("Tracking HA sensor %s: Request POST %s %s\r\n", stateCast.c_str(), url.c_str(), postData.c_str());
 
+    // 1 second, in case power off, HomeAssistant may by down
+    haClient.setTimeout(1000); 
     haClient.post(url, contentType, postData);
 
     int statusCode = haClient.responseStatusCode();

@@ -27,6 +27,7 @@ Thread sensorThread = Thread();
 Thread monitorThread = Thread();
 Thread ledThread = Thread();
 Thread timeSyncThread = Thread();
+Thread haSensorThread = Thread();
 
 int ledMode = LED_MODE_OFF;
 int ledState = -1;
@@ -34,6 +35,7 @@ int ledState = -1;
 void sensorThreadFunc();
 void monitorThreadFunc();
 void ledThreadFunc();
+void haSensorThreadFunc();
 
 void setup() {
   pinMode(LED_PIN, OUTPUT);
@@ -68,6 +70,9 @@ void setup() {
 
   timeSyncThread.onRun(doTimeSync);
   timeSyncThread.setInterval(1000 * 60 * 10); // 10 minutes
+
+  haSensorThread.onRun(haSensorThreadFunc);
+  haSensorThread.setInterval(1000 * 30); // 30 seconds
 }
 
 void loop() {
@@ -88,6 +93,10 @@ void loop() {
 
   if (timeSyncThread.shouldRun()) {
     timeSyncThread.run();
+  }
+
+  if (haSensorThread.shouldRun()) {
+    haSensorThread.run();
   }
 }
 
@@ -172,4 +181,8 @@ void ledThreadFunc() {
 
   analogWrite(LED_PIN, ledState == HIGH ? 0 : 255);
   ledChangedStateMillis = currentMillis;
+}
+
+void haSensorThreadFunc() {
+  haSensor.track();
 }
