@@ -33,14 +33,30 @@ void HomeAssistantSensor::track() {
 
     Serial.printf("Tracking HA sensor %s: Request POST %s %s\r\n", stateCast.c_str(), url.c_str(), postData.c_str());
 
-    // 1 second, in case power off, HomeAssistant may by down
-    haClient.setTimeout(1000); 
+    this->connect();
     haClient.post(url, contentType, postData);
 
     int statusCode = haClient.responseStatusCode();
     String response = haClient.responseBody();
 
     Serial.printf("Tracking HA sensor %s: Response %d %s\r\n", stateCast.c_str(), statusCode, response.c_str());
+
+    if (statusCode == HTTP_ERROR_API) {
+        this->reconnect = true;
+    }
+}
+
+void HomeAssistantSensor::connect() {
+    if (this->reconnect) {
+        httpClient.setTimeout(1000);
+        haClient.stop();
+        haClient = HttpClient(httpClient, HA_HOST, HA_PORT);
+        this->reconnect = false;
+    }
+    
+    haClient.connectionKeepAlive();
+    haClient.setTimeout(1000); 
+    haClient.setHttpResponseTimeout(1000);
 }
 
 

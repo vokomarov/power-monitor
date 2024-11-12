@@ -47,6 +47,15 @@ You should see updates in your Home Assistant Settings / Devices / Entites and s
 
 Now configure `secrets.h` accordingly and flash updated firmware.
 
+### Wake On Lan
+
+You may want to configure some of your device in LAN to start as soon as power comes online. To configure Wake On Lan update in `secrets.h`:
+
+- `WOL_MAC` - the MAC address of your device (e.g `AA:BB:CC:DD:EE:FF`)
+- `WOL_ENABLED`
+
+Optionally you can update the `WOL_DELAY` in `config.h` to wait for specific amount of time before sending Wake On Lan (30 seconds by default). This may be useful if there is other devices without reserve power that needs to come up online between Power Monitor and your target device, like network switch.
+
 ## Development
 
 ### USB Serial

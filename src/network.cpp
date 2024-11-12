@@ -6,12 +6,15 @@ WiFiClient httpClient;
 WiFiClientSecure httpsClient;
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP);
+WakeOnLan WOL(ntpUDP);
 
 unsigned int WiFiConnectionTimeStarted = 0;
 
 void initWiFi() {
     WiFi.mode(WIFI_STA);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+
+    WOL.setRepeat(3, 100); // Repeat the packet three times with 100ms delay between
 
     WiFiConnectionTimeStarted = millis();
   
@@ -32,6 +35,8 @@ void initWiFi() {
     Serial.printf("Connected to WiFi, IP: %s\n\r", WiFi.localIP().toString().c_str());
     Serial.printf("RSSI: %d\n\r", WiFi.RSSI());
 
+    WOL.calculateBroadcastAddress(WiFi.localIP(), WiFi.subnetMask());
+
     httpsClient.setInsecure();  // Bypass SSL for testing purposes
 }
 
@@ -49,5 +54,16 @@ void initTimeSync() {
 void doTimeSync() {
     timeClient.update();
     Serial.printf("TimeSync done, current time: %s\n\r", timeClient.getFormattedTime().c_str());
+}
+
+void sendWakeOnLan() {
+    if (!WOL_ENABLED || WOL_MAC == "") {
+        return;
+    }
+
+    Serial.printf("Sending WakeOnLan: %s\n\r", WOL_MAC);
+
+    const char *MACAddress = WOL_MAC;
+    WOL.sendMagicPacket(MACAddress);
 }
 

@@ -12,6 +12,7 @@
 #include <ota.h>
 #include <network.h>
 #include <ha.h>
+#include <helper.h>
 
 #define LED_MODE_OFF 0
 #define LED_MODE_STANDBY 1
@@ -28,14 +29,19 @@ Thread monitorThread = Thread();
 Thread ledThread = Thread();
 Thread timeSyncThread = Thread();
 Thread haSensorThread = Thread();
+Thread wolThread = Thread();
 
 int ledMode = LED_MODE_OFF;
 int ledState = -1;
+unsigned long powerUpTime = 0;
+unsigned long powerDownTime = 0;
+bool wolSentFlag = true;
 
 void sensorThreadFunc();
 void monitorThreadFunc();
 void ledThreadFunc();
 void haSensorThreadFunc();
+void wolThreadFunc();
 
 void setup() {
   pinMode(LED_PIN, OUTPUT);
@@ -73,6 +79,9 @@ void setup() {
 
   haSensorThread.onRun(haSensorThreadFunc);
   haSensorThread.setInterval(1000 * 30); // 30 seconds
+
+  wolThread.onRun(wolThreadFunc);
+  wolThread.setInterval(1000 * 10); // 10 seconds
 }
 
 void loop() {
@@ -98,6 +107,10 @@ void loop() {
   if (haSensorThread.shouldRun()) {
     haSensorThread.run();
   }
+
+  if (wolThread.shouldRun()) {
+    wolThread.run();
+  }
 }
 
 int powerState = -10;
@@ -120,9 +133,12 @@ void sensorThreadFunc() {
   }
       
   if (currentPowerState == HIGH) {
-    sprintf(messageBuff, "%s🟢 Power is online (%s) 👌", messageBuff, timestamp);
+    powerUpTime = millis();
+    String diff = getTimeDiffLabel(powerDownTime, powerUpTime);
+    sprintf(messageBuff, "%s🟢 Power is online (%s%s) 👌", messageBuff, timestamp, diff.c_str());
     state = "UP";
   } else {
+    powerDownTime = millis();
     sprintf(messageBuff, "%s🔴 Power is offline (%s) 😱", messageBuff, timestamp);
     state = "DOWN";
   }
@@ -135,6 +151,7 @@ void sensorThreadFunc() {
   if (currentPowerState == LOW) {
     ledMode = LED_MODE_STANDBY;
     haSensor.track(false);
+    wolSentFlag = false;
   } else {
     ledMode = LED_MODE_OFF;
     haSensor.track(true);
@@ -185,4 +202,19 @@ void ledThreadFunc() {
 
 void haSensorThreadFunc() {
   haSensor.track();
+}
+
+void wolThreadFunc() {
+  if (powerState != HIGH || wolSentFlag) {
+    // there is no power yet OR WOL has already been sent
+    return;
+  }
+
+  if (millis() - powerUpTime < WOL_DELAY) {
+    // delay has not reached since power come online
+    return;
+  }
+
+  sendWakeOnLan();
+  wolSentFlag = true;
 }
